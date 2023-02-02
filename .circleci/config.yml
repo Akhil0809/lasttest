@@ -30,7 +30,8 @@ jobs:
         - run:
             name: configure aws and ecr and then pull image     
             command: |
-              scp 'first.sh .env' $SSH_USER@$SSH_HOST:/tmp 
+              scp .env $SSH_USER@$SSH_HOST:/tmp
+              scp first.sh $SSH_USER@$SSH_HOST:/tmp 
               ssh $SSH_USER@$SSH_HOST "cd /tmp; chmod +x first.sh; sudo ./first.sh"
 workflows:  
    for-tailcutter:
