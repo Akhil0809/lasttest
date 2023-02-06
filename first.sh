@@ -10,4 +10,4 @@ sudo apt-get install docker docker-compose -y
 aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 310961312410.dkr.ecr.ap-south-1.amazonaws.com
 docker pull 310961312410.dkr.ecr.ap-south-1.amazonaws.com/test:$Version
 docker images
-docker run -itd --name test-container 310961312410.dkr.ecr.ap-south-1.amazonaws.com/test:$Version --env-file=.env
+docker run -itd --name test-container-$Version 310961312410.dkr.ecr.ap-south-1.amazonaws.com/test:$Version --env-file=.env
