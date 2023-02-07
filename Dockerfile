@@ -1,4 +1,2 @@
-FROM node:18-alpine
-RUN yarn install --production
-CMD echo"Hello"
+FROM ubuntu
 EXPOSE 3000
