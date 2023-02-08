@@ -48,7 +48,7 @@ workflows:
               - build_and_push_image_to_ecr
         - establish_ssh_connection_and_pull_image:
             requires:
-              - build_and_push_image_to_ecr
+              - hold
             context: 
               - ssh_coonection
               - aws-credentials
