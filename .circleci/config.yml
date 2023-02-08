@@ -43,6 +43,7 @@ workflows:
                 only:
                  - develop/mahle
         - establish_ssh_connection_and_pull_image:
+            type: approval
             requires:
               - build_and_push_image_to_ecr
             context: 
