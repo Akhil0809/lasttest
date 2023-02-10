@@ -1,6 +1,5 @@
 version: '2.1'
-orbs:
-  aws-cli: circleci/aws-cli@3.1.4
+orbs: 
 
 jobs:
   build_and_push_image_to_ecr:
@@ -28,17 +27,9 @@ jobs:
         enabled: true
      steps:
         - checkout 
-        - aws-cli/setup:
-            aws-access-key-id: AWS_ACCESS_KEY_ID
-            aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-            aws-region: AWS_DEFAULT_REGION          
         - run:
             name: configure aws and ecr and then pull image     
             command: |
-              PUBLIC_IP=$(curl ipinfo.io/ip)
-              echo PUBLIC_IP
-              SG_ID=sgr-0bf783bd14d85a525
-              aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION  --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
               scp .env $SSH_USER@$SSH_HOST:/tmp
               scp first.sh $SSH_USER@$SSH_HOST:/tmp 
               ssh $SSH_USER@$SSH_HOST "cd /tmp; chmod +x first.sh; sudo ./first.sh"
