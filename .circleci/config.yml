@@ -1,3 +1,4 @@
+
 version: '2.1'
 orbs: 
   aws-cli: circleci/aws-cli@2.0
@@ -37,9 +38,9 @@ jobs:
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_DEFAULT_REGION 
-        - run:
-            name: Deploy    
-            command: |
+      - run:
+          name: Deploy    
+          command: |
               #sudo apt-get update
               sudo apt install python3-pip
              
@@ -47,17 +48,14 @@ jobs:
               #sudo aws --version 
               #Get the IP of executor
               PUBLIC_IP=$(curl ipinfo.io/ip)
-
               echo PUBLIC_IP
               SG_ID=sgr-0bf783bd14d85a525
               aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
             
-
               scp .env $SSH_USER@$SSH_HOST:/tmp
               scp first.sh $SSH_USER@$SSH_HOST:/tmp 
               ssh $SSH_USER@$SSH_HOST "cd /tmp; chmod +x first.sh; sudo ./first.sh"
               aws ec2 revoke-security-group-ingress --region ap-southeast-1 --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
-
 workflows:  
    for-tailcutter:
       jobs:
