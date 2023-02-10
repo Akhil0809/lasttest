@@ -11,16 +11,16 @@ jobs:
     steps:
       - checkout:
       - setup_remote_docker
-      - aws-cli/setup:
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          aws-region: AWS_DEFAULT_REGION
+      - run:
+          name: Configure aws
+          command: aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION
 
 
       - run:
           name: Build Success
           when: on_success
           command: >
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION
             sudo apt-get update          
 
             sudo apt install python3-pip
@@ -43,18 +43,13 @@ jobs:
       - image: circleci/openjdk:8-jdk
     steps:
       - checkout:
-      - aws-cli/setup:
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          aws-region: AWS_DEFAULT_REGION
+
       - run:
           name: Deploy
           when: on_success
           command:  |
             
-         
-
-        
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION         
             sudo apt-get update
             sudo apt install python3-pip
             sudo apt-get install -y awscli 
