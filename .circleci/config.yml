@@ -28,25 +28,29 @@ jobs:
               docker tag ${REPO_NAME}:latest ${ECR_REPO_URL}/${REPO_NAME}:latest
               docker push ${ECR_REPO_URL}/${REPO_NAME}:latest
   establish_ssh_connection_and_pull_image:
-     #here we are using aws linux server over which we can run our docker conatiners for deployment 
-     machine:
-        enabled: true
-     steps:
-        - checkout 
+     #here we are using aws linux server over which we can run our docker containers for deployment 
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout:
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_DEFAULT_REGION 
         - run:
             name: Deploy    
             command: |
-              sudo apt-get update
+              #sudo apt-get update
               sudo apt install python3-pip
              
               sudo apt-get install -y awscli 
-              sudo aws --version 
+              #sudo aws --version 
               #Get the IP of executor
               PUBLIC_IP=$(curl ipinfo.io/ip)
 
               echo PUBLIC_IP
-              #SG_ID=sgr-0bf783bd14d85a525
-              #aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
+              SG_ID=sgr-0bf783bd14d85a525
+              aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
             
 
               scp .env $SSH_USER@$SSH_HOST:/tmp
