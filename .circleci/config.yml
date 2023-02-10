@@ -1,14 +1,12 @@
-
 version: '2.1'
-orbs: 
-  aws-cli: circleci/aws-cli@2.0
-  python: circleci/python@2.0.3  
+orbs:
+  aws-cli: circleci/aws-cli@3.1.4
 
 jobs:
   build_and_push_image_to_ecr:
-  #using docker as executor
+  #ussing docker as executor
      docker:
-       - image: cimg/python:3.10.5 #this we can change based upon the executor 
+       - image: cimg/python:3.10.5
      steps:
        - setup_remote_docker  #setting up a remote docker on which we can run our commands
        - checkout #checkout git repo
@@ -19,39 +17,31 @@ jobs:
        - run:
             name: build and push images 
             command: |  
-              # docker build -t 310961312410.dkr.ecr.ap-south-1.amazonaws.com/test:$Version .
-              # #configure ecr to push images
-              # aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 310961312410.dkr.ecr.ap-south-1.amazonaws.com
-              # docker push 310961312410.dkr.ecr.ap-south-1.amazonaws.com/test:$Version
-              # aws ecr list-images --repository-name test
-              docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION ) ${ECR_REPO_URL}/${REPO_NAME}
-              docker build -t ${REPO_NAME} .
-              docker tag ${REPO_NAME}:latest ${ECR_REPO_URL}/${REPO_NAME}:latest
-              docker push ${ECR_REPO_URL}/${REPO_NAME}:latest
+              docker build -t 310961312410.dkr.ecr.ap-south-1.amazonaws.com/test:$Version .
+              #configure ecr to push images
+              aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 310961312410.dkr.ecr.ap-south-1.amazonaws.com
+              docker push 310961312410.dkr.ecr.ap-south-1.amazonaws.com/test:$Version
+              aws ecr list-images --repository-name test
   establish_ssh_connection_and_pull_image:
-     #here we are using aws linux server over which we can run our docker containers for deployment 
-    docker:
-      - image: cimg/python:3.10.5
-    steps:
-      - checkout:
-      - run:
-          name: Deploy    
-          command: |
-              #sudo apt-get update
-              sudo apt install python3-pip
-             
-              sudo apt-get install -y awscli 
-              #sudo aws --version 
-              #Get the IP of executor
+     #here we are using aws linux server over which we can run our docker conatiners for deployment 
+     machine:
+        enabled: true
+     steps:
+        - checkout 
+        - aws-cli/setup:
+            aws-access-key-id: $AWS_ACCESS_KEY_ID
+            aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
+            aws-region: $AWS_DEFAULT_REGION          
+        - run:
+            name: configure aws and ecr and then pull image     
+            command: |
               PUBLIC_IP=$(curl ipinfo.io/ip)
               echo PUBLIC_IP
               SG_ID=sgr-0bf783bd14d85a525
-              aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
-            
+              aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION  --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
               scp .env $SSH_USER@$SSH_HOST:/tmp
               scp first.sh $SSH_USER@$SSH_HOST:/tmp 
               ssh $SSH_USER@$SSH_HOST "cd /tmp; chmod +x first.sh; sudo ./first.sh"
-              aws ec2 revoke-security-group-ingress --region ap-southeast-1 --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
 workflows:  
    for-tailcutter:
       jobs:
@@ -60,18 +50,14 @@ workflows:
             filters:
               branches:
                 only:
-                 - develop/mahle
-        - hold:
-            type: approval
-            requires:
-              - build_and_push_image_to_ecr
+                 - main
         - establish_ssh_connection_and_pull_image:
             requires:
-              - hold
+              - build_and_push_image_to_ecr
             context: 
               - ssh_coonection
               - aws-credentials
             filters:
               branches:
                 only:
-                 - develop/mahle
+                 - main
