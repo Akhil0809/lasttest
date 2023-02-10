@@ -36,7 +36,7 @@ jobs:
               PUBLIC_IP=$(curl ipinfo.io/ip)
               echo PUBLIC_IP
               SG_ID=sg-0cdee1929d5f0eeaf
-              aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
+              aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32 || true
               scp -o StrictHostKeyChecking=no .env $SSH_USER@$SSH_HOST:/tmp
               scp -o StrictHostKeyChecking=no first.sh $SSH_USER@$SSH_HOST:/tmp 
               ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "cd /tmp; chmod +x first.sh; sudo ./first.sh"
