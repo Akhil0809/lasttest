@@ -1,7 +1,5 @@
 version: '2.1'
-orbs:
-  aws-cli: circleci/aws-cli@2.0
-  python: circleci/python@2.0.3
+
 
 jobs:
   build:
@@ -9,7 +7,7 @@ jobs:
       - image: cimg/python:3.10.2
       - image: 'docker:17.09.1-ce-git'
     steps:
-      - checkout:
+      - checkout
       - setup_remote_docker
       - run:
           name: Configure aws
@@ -42,7 +40,7 @@ jobs:
     docker:
       - image: circleci/openjdk:8-jdk
     steps:
-      - checkout:
+      - checkout
 
       - run:
           name: Deploy
