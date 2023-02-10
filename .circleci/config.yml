@@ -1,116 +1,61 @@
 version: '2.1'
-
+orbs: 
 
 jobs:
-  build:
-    docker:
-      - image: cimg/python:3.10.5
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Build Success
-          when: on_success
-          command: >
-           
-            pip install awscli
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION
-
-            docker login -u AWS -p $(aws ecr get-login-password --region ap-south-1) ${ECR_REPO_URL}/${REPO_NAME}
-
-
-            docker build -t ${REPO_NAME} .
-
-            docker tag ${REPO_NAME}:latest ${ECR_REPO_URL}/${REPO_NAME}:latest
-
-            docker push ${ECR_REPO_URL}/${REPO_NAME}:latest
-  
-  deploy:
-    docker:
-      - image: cimg/python:3.10.2
-    steps:
-      - checkout
-
-      - run:
-          name: Deploy
-          when: on_success
-          command:  |
-            pip install awscli
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION         
-            
-            sudo aws --version          
-      
-            PUBLIC_IP=$(curl ipinfo.io/ip)
-
-            echo PUBLIC_IP
-            
-            # 3- Get AWS Region
-            AWS_REGION=ap-south-1
-
-            # 4- Get SG ID
-            SG_ID=sgr-0bf783bd14d85a525
-            
-            # 5- Add an ingress rule to the security group
-            aws ec2 authorize-security-group-ingress --region ap-south-1 --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32 || true
-            
-            # 6- Give the ingress rule some time to propogate
-            # sleep 5
-
-            # 7- SSH to the server to deploy
-            # TODO Change to your username
-            # EC2_USERNAME=${EC2_USERAME}
-            # # TODO Change to your server's URL or public IP
-            # EC2_PUBLIC_DNS=${EC2_PUBLIC_DNS}
-
-            # echo $EC2_USERNAME
-            # echo $EC2_PUBLIC_DNS
-            
-            # echo $ENV_FILE | base64 --decode > .env
-            # echo $PEM_FILE | base64 --decode > server.pem
-
-            # chmod 400 server.pem
-
-            # chmod +x .circleci/deploy.sh
-            
-            # scp -o StrictHostKeyChecking=no -i server.pem -v -r ./docker-compose-prod.yml ubuntu@172.23.149.30:/home/ubuntu/cd
-            # scp -o StrictHostKeyChecking=no -i server.pem -v -r ./entrypoint.sh ubuntu@172.23.149.30:/home/ubuntu/cd
-            # scp -o StrictHostKeyChecking=no -i server.pem -v -r .env ubuntu@172.23.149.30:/home/ubuntu/cd
-            # scp -o StrictHostKeyChecking=no -i server.pem -v -r ./medtech_api_deploy.sh ubuntu@172.23.149.30:/home/ubuntu/cd
-            # scp -o StrictHostKeyChecking=no -i server.pem -v -r ../nginx/Dockerfile ubuntu@172.23.149.30:/home/ubuntu/cd
-            # scp -o StrictHostKeyChecking=no -i server.pem -v -r ../nginx/nginx.conf ubuntu@172.23.149.30:/home/ubuntu/cd
+  build_and_push_image_to_ecr:
+  #ussing docker as executor
+     docker:
+       - image: cimg/python:3.10.5
+     steps:
+       - setup_remote_docker  #setting up a remote docker on which we can run our commands
+       - checkout #checkout git repo
+       - run: pip install awscli
+       - run: 
+            name: configure aws
+            command: aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION 
+       - run:
+            name: build and push images 
+            command: |  
+              docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION ) ${ECR_REPO_URL}/${REPO_NAME}
+              docker build -t ${REPO_NAME} .
+              docker tag ${REPO_NAME}:latest ${ECR_REPO_URL}/${REPO_NAME}:latest
+              docker push ${ECR_REPO_URL}/${REPO_NAME}:latest
+  establish_ssh_connection_and_pull_image:
+     #here we are using aws linux server over which we can run our docker conatiners for deployment 
+     docker:
+        - image: cimg/python:3.10.5
+     steps:
+        - checkout 
+        - run: pip install awscli
+        - run: 
+            name: configure aws
+            command: aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION 
+        - run:
+            name: pull image     
+            command: |
+              PUBLIC_IP=$(curl ipinfo.io/ip)
+              echo PUBLIC_IP
+              SG_ID=sgr-0bf783bd14d85a525
               aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
-            
               scp .env $SSH_USER@$SSH_HOST:/tmp
               scp first.sh $SSH_USER@$SSH_HOST:/tmp 
               ssh $SSH_USER@$SSH_HOST "cd /tmp; chmod +x first.sh; sudo ./first.sh"
-              aws ec2 revoke-security-group-ingress --region ap-southeast-1 --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
-            # bash /home/ubuntu/cd/medtech_api_deploy.sh
-
-            #aws ec2 revoke-security-group-ingress --region ap-southeast-1 --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
-
-            
-             
-            
 workflows:  
    for-tailcutter:
       jobs:
-        - build:
+        - build_and_push_image_to_ecr:
             context: aws-credentials
             filters:
               branches:
                 only:
-                 - develop/mahle
-        - hold:
-            type: approval
+                 - main
+        - establish_ssh_connection_and_pull_image:
             requires:
-              - build
-        - deploy:
-            requires:
-              - hold
+              - build_and_push_image_to_ecr
             context: 
               - ssh_coonection
               - aws-credentials
             filters:
               branches:
                 only:
-                 - develop/mahle
+                 - main
