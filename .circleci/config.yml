@@ -10,20 +10,15 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Configure aws
-          command: aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION
-
-
-      - run:
           name: Build Success
           when: on_success
           command: >
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION
+            pip install awscli
+            sudo aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION
+
             sudo apt-get update          
 
             sudo apt install python3-pip
-
-            sudo apt-get install -y awscli
 
             sudo aws --version
 
@@ -46,11 +41,12 @@ jobs:
           name: Deploy
           when: on_success
           command:  |
-            
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION         
             sudo apt-get update
-            sudo apt install python3-pip
             sudo apt-get install -y awscli 
+            
+            sudo apt install python3-pip
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION         
+            
             sudo aws --version          
       
             PUBLIC_IP=$(curl ipinfo.io/ip)
