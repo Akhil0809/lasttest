@@ -5,7 +5,6 @@ jobs:
   build:
     docker:
       - image: cimg/python:3.10.2
-      - image: 'docker:17.09.1-ce-git'
     steps:
       - checkout
       - setup_remote_docker
@@ -14,12 +13,8 @@ jobs:
           when: on_success
           command: >
            
-            sudo apt-get update          
-
-            sudo apt install python3-pip
-            sudo apt-get install -y awscli 
-            sudo aws --version
-            sudo aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION
+            pip install awscli
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION
 
             docker login -u AWS -p $(aws ecr get-login-password --region ap-south-1) ${ECR_REPO_URL}/${REPO_NAME}
 
@@ -32,7 +27,7 @@ jobs:
   
   deploy:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: cimg/python:3.10.2
     steps:
       - checkout
 
@@ -40,10 +35,7 @@ jobs:
           name: Deploy
           when: on_success
           command:  |
-            sudo apt-get update
-            sudo apt-get install -y awscli 
-            
-            sudo apt install python3-pip
+            pip install awscli
             aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID && aws configure set aws_secret_key $AWS_SECRET_ACCESS_KEY && aws configure set default.region $AWS_DEFAULT_REGION         
             
             sudo aws --version          
