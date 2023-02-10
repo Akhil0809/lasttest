@@ -31,7 +31,7 @@ jobs:
   establish_ssh_connection_and_pull_image:
      #here we are using aws linux server over which we can run our docker containers for deployment 
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: cimg/python:3.10.5
     steps:
       - checkout:
       - aws-cli/setup:
