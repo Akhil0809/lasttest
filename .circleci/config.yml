@@ -107,7 +107,7 @@ jobs:
 workflows:  
    for-tailcutter:
       jobs:
-        - build_and_push_image_to_ecr:
+        - build:
             context: aws-credentials
             filters:
               branches:
@@ -117,7 +117,7 @@ workflows:
             type: approval
             requires:
               - build_and_push_image_to_ecr
-        - establish_ssh_connection_and_pull_image:
+        - deploy:
             requires:
               - hold
             context: 
