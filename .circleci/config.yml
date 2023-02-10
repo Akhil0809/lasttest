@@ -48,7 +48,7 @@ workflows:
             filters:
               branches:
                 only:
-                 - main
+                 - develop/mahle
         - establish_ssh_connection_and_pull_image:
             requires:
               - build_and_push_image_to_ecr
@@ -58,4 +58,4 @@ workflows:
             filters:
               branches:
                 only:
-                 - main
+                 - develop/mahle
