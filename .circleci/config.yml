@@ -116,7 +116,7 @@ workflows:
         - hold:
             type: approval
             requires:
-              - build_and_push_image_to_ecr
+              - build
         - deploy:
             requires:
               - hold
