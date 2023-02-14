@@ -16,6 +16,7 @@ jobs:
        - run:
             name: build and push images 
             command: |  
+              echo $CIRCLE_BRANCH
               docker login -u AWS -p $(aws ecr get-login-password --region $AWS_DEFAULT_REGION ) ${ECR_REPO_URL}/${REPO_NAME}
               docker build -t ${REPO_NAME} .
               docker tag ${REPO_NAME}:latest ${ECR_REPO_URL}/${REPO_NAME}:latest
