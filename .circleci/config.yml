@@ -41,7 +41,7 @@ jobs:
               aws ec2 authorize-security-group-ingress --region $AWS_DEFAULT_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32 || true
               scp -o StrictHostKeyChecking=no .env $SSH_USER@$SSH_HOST:/tmp
               scp -o StrictHostKeyChecking=no first.sh $SSH_USER@$SSH_HOST:/tmp 
-              ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "cd /tmp; chmod +x first.sh; sudo ./first.sh"
+              ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "sudo su; cd /tmp; chmod +x first.sh; sudo ./first.sh"
 workflows:  
    for-tailcutter:
       jobs:
