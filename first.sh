@@ -3,7 +3,7 @@ source /etc/profile.d/test.sh
 echo $Version
 sudo curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 #sudo unzip awscliv2.zip
-#sudo ./aws/install
+#sudo ./aws/installv
 sudo apt-get update
 sudo apt-get upgrade -y
 sudo apt-get install docker docker-compose -y
