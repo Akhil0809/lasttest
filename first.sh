@@ -4,7 +4,7 @@ echo $Version
 aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${ECR_REPO_URL}
 docker pull ${ECR_REPO_URL}/${REPO_NAME}:$Version
 docker images
-CONTAINER_NAME='tailcutter-frontend-${CIRCLE_BRANCH}'
+CONTAINER_NAME='tailcutter-${CIRCLE_BRANCH}'
 CID=$(docker ps -q -f status=running -f name=^/${CONTAINER_NAME}$)
 EXIT=$(docker ps -q -f status=exited -f name=^/${CONTAINER_NAME}$)
 if [ "${CID}" ]; then
