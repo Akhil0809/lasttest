@@ -1,14 +1,26 @@
 #!/bin/bash
 source /etc/profile.d/test.sh
 echo $Version
-sudo curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-#sudo unzip awscliv2.zip
-#sudo ./aws/installv
-sudo apt-get update
-sudo apt-get upgrade -y
-sudo apt-get install docker docker-compose -y
-#export $(cat .env | egrep -v "(^#.*|^$)" | xargs)
-aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 
-docker pull $ECR_REPO_URL/$REPO_NAME:$Version
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${ECR_REPO_URL}
+docker pull ${ECR_REPO_URL}/${REPO_NAME}:$Version
 docker images
-docker run -itd --name test-container-ssh-test $ECR_REPO_URL/$REPO_NAME:$Version
+CONTAINER_NAME='tailcutter-frontend-${CIRCLE_BRANCH}'
+CID=$(docker ps -q -f status=running -f name=^/${CONTAINER_NAME}$)
+EXIT=$(docker ps -q -f status=exited -f name=^/${CONTAINER_NAME}$)
+if [ "${CID}" ]; then
+   echo "Container exists"
+   docker-compose -f /home/ubuntu/composetest/docker-compose-${CIRCLE_BRANCH}.yml down
+fi
+
+if [ "${EXIT}" ]; then
+   echo "Container exists"
+   docker rm tailcutter-frontend-${CIRCLE_BRANCH}
+fi
+
+if [ "${EXIT}" ]; then
+  echo "Container exists"
+  docker rm tailcutter-backend-${CIRCLE_BRANCH}
+fi
+
+
+docker run -itd --name tailcutter-frontend-${CIRCLE_BRANCH} ${ECR_REPO_URL}/${REPO_NAME}:$Version 
